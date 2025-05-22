@@ -15,6 +15,9 @@ type RenderOptions  = { render:  (jsx: JSX.Element) => string } & DefaultOptions
 
 type HasRender<O> = O extends { render: (jsx: JSX.Element) => string } ? true : false;
 
+export type StreamResponseBase = StreamResponse<DefaultOptions>;
+export type StreamResponseJsx  = StreamResponse<RenderOptions>;
+
 export class StreamResponse<O extends Options<boolean>, T extends boolean = HasRender<O>> {
 	#controller: ReadableStreamDefaultController | null;
 	#timer: number | null;
