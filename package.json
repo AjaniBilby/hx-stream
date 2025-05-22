@@ -14,7 +14,7 @@
 	"scripts": {
 		"build": "npm run build:client & npm run build:server",
 		"build:client": "tsc --project tsconfig.client.json",
-		"build:server": "tsc --project tsconfig.server.json",
+		"build:server": "tsc --project tsconfig.json",
 		"minify": "npm run minify:client",
 		"minify:client": "terser dist/client.js --compress --mangle --output dist/client.min.js"
 	},

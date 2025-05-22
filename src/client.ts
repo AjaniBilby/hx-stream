@@ -53,10 +53,10 @@ async function Process(method: string, url: string, headers: Record<string, stri
 	const reader = req.body.getReader();
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
-		const { done, value: buffer } = await reader.read();
+		const { done, value } = await reader.read();
 		if (done) break;
 
-		const html = decoder.decode(buffer).trim();
+		const html = decoder.decode(value).trim();
 		if (html === "") continue; // ignore keepalive byte
 
 		binding.swap(target, html, { swapStyle: "beforeend" });

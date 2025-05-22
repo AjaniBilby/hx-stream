@@ -18,8 +18,8 @@ jobs:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
+      - run: npx tsc --project tsconfig.json
       - run: npx tsc --project tsconfig.client.json
-      - run: npx tsc --project tsconfig.server.json
       - run: npx terser dist/client.js --compress --mangle --output dist/client.min.js
       - run: npm publish --provenance --access public
         env:
