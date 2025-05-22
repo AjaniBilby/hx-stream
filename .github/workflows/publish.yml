@@ -18,7 +18,9 @@ jobs:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
-      - run: npm run build
+      - run: tsc --project tsconfig.client.json
+      - run: tsc --project tsconfig.server.json
+      - run: terser dist/client.js --compress --mangle --output dist/client.min.js
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
