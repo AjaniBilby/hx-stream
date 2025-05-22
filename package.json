@@ -1,0 +1,27 @@
+{
+	"name": "hx-stream",
+	"version": "0.0.0",
+	"description": "keep htmx client state across page refreshes",
+	"keywords": [ "htmx", "streaming" ],
+	"homepage": "https://hx-stream.ajanibilby.com",
+	"bugs": {
+		"url": "https://github.com/AjaniBilby/hx-stream/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/AjaniBilby/hx-stream.git"
+	},
+	"scripts": {
+		"build": "npm run build:client & npm run build:server",
+		"build:client": "tsc --project tsconfig.client.json & terser dist/client.js --compress --mangle --output dist/client.min.js",
+		"build:server": "tsc --project tsconfig.server.json"
+	},
+	"license": "MIT",
+	"author": "Ajani Bilby",
+	"type": "commonjs",
+	"main": "dist/client.min.js",
+	"devDependencies": {
+		"terser": "^5.39.0",
+		"typescript": "^5.8.3"
+	}
+}
