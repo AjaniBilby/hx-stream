@@ -1,6 +1,6 @@
 {
 	"name": "hx-stream",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "keep htmx client state across page refreshes",
 	"keywords": [ "htmx", "streaming" ],
 	"homepage": "https://hx-stream.ajanibilby.com",
@@ -20,7 +20,7 @@
 	},
 	"license": "MIT",
 	"author": "Ajani Bilby",
-	"type": "commonjs",
+	"type": "module",
 	"main": "dist/client.min.js",
 	"devDependencies": {
 		"terser": "^5.39.0",
