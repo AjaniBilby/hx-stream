@@ -15,10 +15,7 @@ type RenderOptions  = { render:  (jsx: JSX.Element) => string } & DefaultOptions
 
 type HasRender<O> = O extends { render: (jsx: JSX.Element) => string } ? true : false;
 
-export type StreamResponseBase = StreamResponse<DefaultOptions>;
-export type StreamResponseJsx  = StreamResponse<RenderOptions>;
-
-export class StreamResponse<O extends Options<boolean>, T extends boolean = HasRender<O>> {
+export class StreamResponse<JsxEnabled extends boolean> {
 	#controller: ReadableStreamDefaultController | null;
 	#timer: number | null;
 	#state: number;
@@ -37,7 +34,7 @@ export class StreamResponse<O extends Options<boolean>, T extends boolean = HasR
 	static OPEN       = 1;
 	static CLOSED     = 2;
 
-	constructor(request: Request, options: O) {
+	constructor(request: Request, options: Options<JsxEnabled>) {
 		this.#controller = null;
 		this.#state = StreamResponse.CONNECTING;
 		this.withCredentials = request.mode === "cors";
@@ -52,6 +49,10 @@ export class StreamResponse<O extends Options<boolean>, T extends boolean = HasR
 
 		this.response = new Response(stream, { headers });
 		this.#timer = setInterval(() => this.keepAlive(), options.keepAlive || 30_000);
+	}
+
+	bind(controller: ReadableByteStreamController) {
+		this.#controller = controller;
 	}
 
 	private sendBytes(chunk: Uint8Array) {
@@ -73,7 +74,7 @@ export class StreamResponse<O extends Options<boolean>, T extends boolean = HasR
 
 	private keepAlive() { return this.sendText(" "); }
 
-	send (target: string, swap: string, html: T extends true ? (JSX.Element | string) : string) {
+	send (target: string, swap: string, html: JsxEnabled extends true ? (JSX.Element | string) : string) {
 		if (this.#state === StreamResponse.CLOSED) {
 			const err = new Error(`Warn: Attempted to send data on closed stream for: ${this.url}`);
 			console.warn(err);
@@ -107,4 +108,12 @@ export class StreamResponse<O extends Options<boolean>, T extends boolean = HasR
 
 		return true;
 	}
+}
+
+
+export function MakeStream<O extends (DefaultOptions | RenderOptions)>(
+	request: Request,
+	options: O
+): StreamResponse<HasRender<O>> {
+	return new StreamResponse(request, options as any);
 }
