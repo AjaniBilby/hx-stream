@@ -37,6 +37,7 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	constructor(request: Request, options: Options<JsxEnabled>) {
 		this.#controller = null;
 		this.#state = StreamResponse.CONNECTING;
+		this.#render = (options as Options<true>).render;
 		this.withCredentials = request.mode === "cors";
 		this.url = request.url;
 
