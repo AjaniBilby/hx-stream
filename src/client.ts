@@ -36,7 +36,6 @@ let binding: {
 const decoder = new TextDecoder("utf8");
 async function Process(method: string, url: string, headers: Record<string, string>, formData: FormData | undefined, target: HTMLElement) {
 	target.classList.add("htmx-request");
-	console.log(formData?.getAll("shipmentID"));
 	const req = await fetch(url, { method, headers, body: formData });
 
 	if (!req.ok) {
@@ -57,10 +56,8 @@ async function Process(method: string, url: string, headers: Record<string, stri
 		const { done, value: buffer } = await reader.read();
 		if (done) break;
 
-		const html = decoder.decode(buffer);
-		if (html === " ") continue; // ignore keepalive byte
-
-		console.log(html);
+		const html = decoder.decode(buffer).trim();
+		if (html === "") continue; // ignore keepalive byte
 
 		binding.swap(target, html, { swapStyle: "beforeend" });
 	}

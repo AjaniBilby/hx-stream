@@ -9,10 +9,17 @@ const headers: ResponseInit["headers"] = {
 	"Connection": "keep-alive",
 }
 
-export class StreamResponse {
+type Options<T extends boolean> = T extends true ? RenderOptions : DefaultOptions;
+type DefaultOptions = { keepAlive?: number };
+type RenderOptions  = { render:  (jsx: JSX.Element) => string } & DefaultOptions;
+
+type HasRender<O> = O extends { render: (jsx: JSX.Element) => string } ? true : false;
+
+export class StreamResponse<O extends Options<boolean>, T extends boolean = HasRender<O>> {
 	#controller: ReadableStreamDefaultController | null;
 	#timer: number | null;
 	#state: number;
+	#render?: (jsx: JSX.Element) => string;
 
 	readonly response: Response;
 
@@ -27,9 +34,7 @@ export class StreamResponse {
 	static OPEN       = 1;
 	static CLOSED     = 2;
 
-
-
-	constructor(request: Request, keepAlive = 30_000) {
+	constructor(request: Request, options: O) {
 		this.#controller = null;
 		this.#state = StreamResponse.CONNECTING;
 		this.withCredentials = request.mode === "cors";
@@ -43,7 +48,7 @@ export class StreamResponse {
 		const stream = new ReadableStream<Uint8Array>({ start, cancel }, { highWaterMark: 0 });
 
 		this.response = new Response(stream, { headers });
-		this.#timer = setInterval(() => this.keepAlive(), keepAlive);
+		this.#timer = setInterval(() => this.keepAlive(), options.keepAlive || 30_000);
 	}
 
 	private sendBytes(chunk: Uint8Array) {
@@ -65,11 +70,17 @@ export class StreamResponse {
 
 	private keepAlive() { return this.sendText(" "); }
 
-	send (target: string, swap: string, html: string) {
+	send (target: string, swap: string, html: T extends true ? (JSX.Element | string) : string) {
 		if (this.#state === StreamResponse.CLOSED) {
 			const err = new Error(`Warn: Attempted to send data on closed stream for: ${this.url}`);
 			console.warn(err);
 		}
+
+		if (typeof html !== "string") {
+			if (!this.#render) throw new Error(`Cannot render to JSX when no renderer provided during class initialization`);
+			html = this.#render(html);
+		}
+
 		return this.sendText(`<div hx-swap-oob="${swap}:${target}">${html}</div>`);
 	}
 
