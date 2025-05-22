@@ -2,10 +2,8 @@
 	"compilerOptions": {
 		"target": "ES2022",
 		"module": "ES2022",
-		"emitDeclarationOnly": true,
 		"moduleResolution": "node",
 		"esModuleInterop": true,
-
 		"declaration": true,
 
 		"strict": true,
