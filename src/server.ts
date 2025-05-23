@@ -10,15 +10,15 @@ const headers: ResponseInit["headers"] = {
 }
 
 type Options<T extends boolean> = T extends true ? RenderOptions : DefaultOptions;
-type DefaultOptions = { keepAlive?: number };
+type DefaultOptions = { keepAlive?: number, highWaterMark?: number };
 type RenderOptions  = { render:  (jsx: JSX.Element) => string } & DefaultOptions;
 
 type HasRender<O> = O extends { render: (jsx: JSX.Element) => string } ? true : false;
 
 
-const SCALE = 36**10;
+const SCALE = 36**6;
 function MakeBoundary() {
-	return "<" + (Math.random()*SCALE).toString(36) + ">";
+	return "hx-"+Math.floor(Math.random()*SCALE).toString(36);
 }
 
 
@@ -55,7 +55,7 @@ export class StreamResponse<JsxEnabled extends boolean> {
 		request.signal.addEventListener('abort', cancel);
 
 		const start  = (c: ReadableStreamDefaultController<Uint8Array>) => { this.#controller = c; this.#state = StreamResponse.OPEN; };
-		const stream = new ReadableStream<Uint8Array>({ start, cancel }, { highWaterMark: 0 });
+		const stream = new ReadableStream<Uint8Array>({ start, cancel }, { highWaterMark: options.highWaterMark || 0 });
 
 		this.response = new Response(stream, { headers });
 		this.response.headers.set("X-Chunk-Boundary", this.#boundary);
@@ -97,7 +97,7 @@ export class StreamResponse<JsxEnabled extends boolean> {
 			html = this.#render(html);
 		}
 
-		return this.sendText(`${target}|${swap}|${html}${this.#boundary}`);
+		return this.sendText(`<${this.#boundary}>${target}|${swap}|${html}</${this.#boundary}>\n`);
 	}
 
 	close () {

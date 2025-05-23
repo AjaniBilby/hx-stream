@@ -58,6 +58,9 @@ async function Process(method: string, url: string, headers: Record<string, stri
 		return;
 	}
 
+	const open  = `<${boundary}>`;
+	const close = `</${boundary}>`;
+
 	const reader = req.body.getReader();
 	let buffer = "";
 	// eslint-disable-next-line no-constant-condition
@@ -67,32 +70,32 @@ async function Process(method: string, url: string, headers: Record<string, stri
 
 		const html = decoder.decode(value);
 
-		const search = Math.max(0, buffer.length-boundary.length);
+		const search = Math.max(0, buffer.length-close.length);
 		buffer += html;
 
-		let idx = buffer.indexOf(boundary, search);
+		let idx = buffer.indexOf(close, search);
 		while (idx !== -1) {
-			const chunk = buffer.slice(0, idx);
-
-			const a = chunk.indexOf("|");
+			let a = buffer.lastIndexOf(open, idx);
 			if (a === -1) return console.error("hx-stream received invalid chunk");
-			const b = chunk.indexOf("|", a+1);
-			if (b === -1) return console.error("hx-stream received invalid chunk");
+			a += open.length;
 
-			const retarget = chunk.slice(0, a).trim(); // trim to remove any keep alive spaces
-			const swap     = chunk.slice(a+1, b);
-			const html     = chunk.slice(b+1);
+			const b = buffer.indexOf("|", a);
+			if (b === -1) return console.error("hx-stream received invalid chunk");
+			const c = buffer.indexOf("|", b+1);
+			if (c === -1) return console.error("hx-stream received invalid chunk");
+
+			const retarget = buffer.slice(a, b).trim();
+			const swap     = buffer.slice(b+1, c).trim();
+			const html     = buffer.slice(c+1, idx);
 
 			const target = htmx.find(source, retarget);
 
 			if (target) binding.swap(target, html, { swapStyle: swap });
 			else console.warn(`hx-stream unable to find target ${retarget}`);
 
-			buffer = buffer.slice(idx + boundary.length);
-			idx = buffer.indexOf(boundary);
+			buffer = buffer.slice(idx + close.length);
+			idx = buffer.indexOf(close);
 		}
-
-		// binding.swap(target, html, { swapStyle: "beforeend" });
 	}
 
 	source.classList.remove("htmx-request");
