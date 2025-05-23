@@ -15,10 +15,18 @@ type RenderOptions  = { render:  (jsx: JSX.Element) => string } & DefaultOptions
 
 type HasRender<O> = O extends { render: (jsx: JSX.Element) => string } ? true : false;
 
+
+const SCALE = 36**10;
+function MakeBoundary() {
+	return "<" + (Math.random()*SCALE).toString(36) + ">";
+}
+
+
 export class StreamResponse<JsxEnabled extends boolean> {
 	#controller: ReadableStreamDefaultController | null;
 	#timer: number | null;
 	#state: number;
+	#boundary: string;
 	#render?: (jsx: JSX.Element) => string;
 
 	readonly response: Response;
@@ -38,6 +46,7 @@ export class StreamResponse<JsxEnabled extends boolean> {
 		this.#controller = null;
 		this.#state = StreamResponse.CONNECTING;
 		this.#render = (options as Options<true>).render;
+		this.#boundary = MakeBoundary();
 		this.withCredentials = request.mode === "cors";
 		this.url = request.url;
 
@@ -49,6 +58,8 @@ export class StreamResponse<JsxEnabled extends boolean> {
 		const stream = new ReadableStream<Uint8Array>({ start, cancel }, { highWaterMark: 0 });
 
 		this.response = new Response(stream, { headers });
+		this.response.headers.set("X-Chunk-Boundary", this.#boundary);
+
 		this.#timer = setInterval(() => this.keepAlive(), options.keepAlive || 30_000);
 	}
 
@@ -86,7 +97,7 @@ export class StreamResponse<JsxEnabled extends boolean> {
 			html = this.#render(html);
 		}
 
-		return this.sendText(`<div hx-swap-oob="${swap}:${target}">${html}</div>`);
+		return this.sendText(`${target}|${swap}|${html}${this.#boundary}`);
 	}
 
 	close () {
