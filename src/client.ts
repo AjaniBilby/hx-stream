@@ -88,7 +88,12 @@ async function Process(method: string, url: string, headers: Record<string, stri
 			const swap     = buffer.slice(b+1, c).trim();
 			const html     = buffer.slice(c+1, idx);
 
-			const target = htmx.find(source, retarget);
+			let target: HTMLElement;
+			switch (retarget) {
+				case "this": target = source; break;
+				case "body": target = document.body; break;
+				default: target = htmx.find(source, retarget)
+			}
 
 			if (target) binding.swap(target, html, { swapStyle: swap });
 			else console.warn(`hx-stream unable to find target ${retarget}`);
