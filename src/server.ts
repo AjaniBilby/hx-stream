@@ -24,6 +24,7 @@ function MakeBoundary() {
 
 export class StreamResponse<JsxEnabled extends boolean> {
 	#controller: ReadableStreamDefaultController | null;
+	#signal: AbortSignal;
 	#timer: number | null;
 	#state: number;
 	#boundary: string;
@@ -53,6 +54,7 @@ export class StreamResponse<JsxEnabled extends boolean> {
 		// immediate prepare for abortion
 		const cancel = () => { this.close(); };
 		request.signal.addEventListener('abort', cancel);
+		this.#signal = request.signal;
 
 		const start  = (c: ReadableStreamDefaultController<Uint8Array>) => { this.#controller = c; this.#state = StreamResponse.OPEN; };
 		const stream = new ReadableStream<Uint8Array>({ start, cancel }, { highWaterMark: options.highWaterMark || 0 });
@@ -68,6 +70,16 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	}
 
 	private sendBytes(chunk: Uint8Array) {
+		if (this.#state === StreamResponse.CLOSED) {
+			const err = new Error(`Warn: Attempted to send data on closed stream for: ${this.url}`);
+			console.warn(err);
+		}
+
+		if (this.#signal.aborted) {
+			this.close();
+			return false;
+		}
+
 		if (!this.#controller) return false;
 
 		try {
@@ -87,11 +99,6 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	private keepAlive() { return this.sendText(" "); }
 
 	send (target: string, swap: string, html: JsxEnabled extends true ? (JSX.Element | string) : string) {
-		if (this.#state === StreamResponse.CLOSED) {
-			const err = new Error(`Warn: Attempted to send data on closed stream for: ${this.url}`);
-			console.warn(err);
-		}
-
 		if (typeof html !== "string") {
 			if (!this.#render) throw new Error(`Cannot render to JSX when no renderer provided during class initialization`);
 			html = this.#render(html);
@@ -101,11 +108,6 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	}
 
 	close () {
-		if (this.#state === StreamResponse.CLOSED) {
-			this.#controller = null;
-			return false;
-		}
-
 		if (this.#controller) {
 			try { this.#controller.close(); }
 			catch (e) { console.error(e); }
@@ -114,6 +116,9 @@ export class StreamResponse<JsxEnabled extends boolean> {
 
 		// Cleanup
 		if (this.#timer) clearInterval(this.#timer);
+
+		// was already closed
+		if (this.#state === EventSource.CLOSED) return false;
 
 		// Mark closed
 		this.#state = StreamResponse.CLOSED;
