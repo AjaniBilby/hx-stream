@@ -1,6 +1,7 @@
 const encoder = new TextEncoder();
 const headers: ResponseInit["headers"] = {
 	// Chunked encoding with immediate forwarding by proxies (i.e. nginx)
+	"X-Content-Type-Options": "nosniff",
 	"X-Accel-Buffering": "no",
 	"Transfer-Encoding": "chunked",
 	"Content-Type": "text/html",
@@ -11,7 +12,7 @@ const headers: ResponseInit["headers"] = {
 
 type Options<T extends boolean> = T extends true ? RenderOptions : DefaultOptions;
 type DefaultOptions = { keepAlive?: number, highWaterMark?: number };
-type RenderOptions  = { render:  (jsx: JSX.Element) => string } & DefaultOptions;
+type RenderOptions  = { render: (jsx: JSX.Element) => string } & DefaultOptions;
 
 type HasRender<O> = O extends { render: (jsx: JSX.Element) => string } ? true : false;
 
@@ -52,12 +53,12 @@ export class StreamResponse<JsxEnabled extends boolean> {
 		this.url = request.url;
 
 		// immediate prepare for abortion
-		const cancel = () => { this.close(); };
+		const cancel = () => { this.close(); request.signal.removeEventListener("abort", cancel) };
 		request.signal.addEventListener('abort', cancel);
 		this.#signal = request.signal;
 
 		const start  = (c: ReadableStreamDefaultController<Uint8Array>) => { this.#controller = c; this.#state = StreamResponse.OPEN; };
-		const stream = new ReadableStream<Uint8Array>({ start, cancel }, { highWaterMark: options.highWaterMark || 0 });
+		const stream = new ReadableStream<Uint8Array>({ start, cancel }, { highWaterMark: options.highWaterMark });
 
 		this.response = new Response(stream, { headers });
 		this.response.headers.set("X-Chunk-Boundary", this.#boundary);
@@ -128,9 +129,24 @@ export class StreamResponse<JsxEnabled extends boolean> {
 }
 
 
-export function MakeStream<O extends (DefaultOptions | RenderOptions)>(
+export function MakeRawStream<O extends (DefaultOptions | RenderOptions)>(
 	request: Request,
 	options: O
 ): StreamResponse<HasRender<O>> {
 	return new StreamResponse(request, options as any);
+}
+
+export function MakeStream<T extends Partial<RenderOptions>>(
+	request: Request,
+	props: T,
+	cb: (stream: StreamResponse<HasRender<T>>, props: T) => Promise<void> | void
+): Response {
+	const stream = MakeRawStream(request, props);
+
+	queueMicrotask(() => {
+		const p = cb(stream, props);
+		if (p instanceof Promise) p.catch(console.error);
+	})
+
+	return stream.response;
 }
