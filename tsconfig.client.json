@@ -8,5 +8,6 @@
 		"lib": ["es2017", "dom"],
 		"moduleResolution": "node"
 	},
-	"include": ["src/client.ts"]
+	"include": ["src/client.ts"],
+	"exclude": ["node_modules"]
 }
