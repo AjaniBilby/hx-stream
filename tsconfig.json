@@ -12,6 +12,6 @@
 		"outDir": "./",
 		"lib": ["ES2022", "dom"]
 	},
-	"include": ["src/*.ts", "global.d.ts"],
+	"include": ["src/server.ts", "global.d.ts"],
 	"exclude": ["node_modules"]
 }
