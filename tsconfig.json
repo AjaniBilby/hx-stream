@@ -9,8 +9,9 @@
 		"strict": true,
 		"skipLibCheck": true,
 
-		"outDir": "./dist",
+		"outDir": "./",
 		"lib": ["ES2022", "dom"]
 	},
-	"include": ["src/server.ts", "global.d.ts"]
+	"include": ["src/*.ts", "global.d.ts"],
+	"exclude": ["node_modules"]
 }

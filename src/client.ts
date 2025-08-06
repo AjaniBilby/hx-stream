@@ -37,7 +37,7 @@ htmx.defineExtension("hx-stream", {
 const decoder = new TextDecoder("utf8");
 async function Process(method: string, url: string, headers: Record<string, string>, formData: FormData | undefined, source: HTMLElement) {
 	source.classList.add("htmx-request");
-	const req = await fetch(url, { method, headers, body: formData });
+	const req = await fetch(url, { method, headers, body: formData, duplex: "half" } as any);
 
 	if (!req.ok) {
 		console.error(await req.text());

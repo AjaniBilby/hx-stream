@@ -4,7 +4,7 @@ const headers: ResponseInit["headers"] = {
 	"X-Content-Type-Options": "nosniff",
 	"X-Accel-Buffering": "no",
 	"Transfer-Encoding": "chunked",
-	"Content-Type": "text/html",
+	"Content-Type": "text/event-stream",
 	// the maximum keep alive chrome shouldn't ignore
 	"Keep-Alive": "timeout=60",
 	"Connection": "keep-alive",
