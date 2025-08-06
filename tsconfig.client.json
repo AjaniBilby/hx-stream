@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "es2017",
 		"declaration": true,
-		"outDir": "./dist",
+		"outDir": "./",
 		"strict": true,
 		"esModuleInterop": true,
 		"lib": ["es2017", "dom"],
