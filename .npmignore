@@ -1,6 +1,7 @@
 *
 !readme.md
-!dist/*
+!/*.js
+!/*.d.ts
 !LICENSE
 !package.json
 !style.css
