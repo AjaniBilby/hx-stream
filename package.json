@@ -1,6 +1,6 @@
 {
 	"name": "hx-stream",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "keep htmx client state across page refreshes",
 	"keywords": [ "htmx", "streaming" ],
 	"homepage": "https://hx-stream.ajanibilby.com",
@@ -18,10 +18,14 @@
 		"minify": "npm run minify:client",
 		"minify:client": "terser client.js --compress --mangle --output client.min.js"
 	},
+	"main": "client.min.js",
+	"exports": {
+		"./client": "./client.js",
+		"./server": "./server.js"
+	},
 	"license": "MIT",
 	"author": "Ajani Bilby",
 	"type": "module",
-	"main": "client.min.js",
 	"devDependencies": {
 		"terser": "^5.39.0",
 		"typescript": "^5.8.3"
