@@ -99,12 +99,10 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	private keepAlive() { return this.sendText(" "); }
 
 	send(target: string, swap: string, html: JsxEnabled extends true ? (JSX.Element | string) : string) {
-		if (typeof html !== "string") {
-			if (!this.#render) throw new Error(`Cannot render to JSX when no renderer provided during class initialization`);
-			html = this.#render(html);
-		}
+		if (typeof html === "string") return this.sendText(`<${this.#boundary}>${target}|${swap}|${html}</${this.#boundary}>\n`);
 
-		return this.sendText(`<${this.#boundary}>${target}|${swap}|${html}</${this.#boundary}>\n`);
+		if (!this.#render) throw new Error(`Cannot render to JSX when no renderer provided during class initialization`);
+		html = this.#render(html);
 	}
 
 	close () {
