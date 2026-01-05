@@ -34,10 +34,12 @@ htmx.defineExtension("hx-stream", {
 	}
 });
 
+const METHODS_WITHOUT_BODY = new Set(['GET', 'HEAD', 'DELETE', 'OPTIONS', 'TRACE', 'CONNECT']);
 const decoder = new TextDecoder("utf8");
-async function Process(method: string, url: string, headers: Record<string, string>, formData: FormData | undefined, source: HTMLElement) {
+async function Process(method: string, url: string, headers: Record<string, string>, body: FormData | undefined, source: HTMLElement) {
+	if (METHODS_WITHOUT_BODY.has(method.toUpperCase())) body = undefined;
 	source.classList.add("htmx-request");
-	const req = await fetch(url, { method, headers, body: formData, duplex: "half" } as any);
+	const req = await fetch(url, { method, headers, body, duplex: "half" } as any);
 
 	if (!req.ok) {
 		console.error(await req.text());
