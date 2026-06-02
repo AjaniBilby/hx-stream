@@ -33,8 +33,8 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	#timer: number | null;
 	#state: number;
 	#boundary: string;
-	#render?: (jsx: JSX.Element) => string;
 
+	readonly render?: (jsx: JSX.Element) => string;
 	readonly response: Response;
 
 	get readyState() { return this.#state; }
@@ -46,7 +46,7 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	constructor(options: Options<JsxEnabled>) {
 		this.#controller = null;
 		this.#state = StreamResponse.CONNECTING;
-		this.#render = (options as Options<true>).render;
+		this.render = (options as Options<true>).render;
 		this.#boundary = MakeBoundary();
 
 		// immediate prepare for abortion
@@ -99,10 +99,12 @@ export class StreamResponse<JsxEnabled extends boolean> {
 	private keepAlive() { return this.sendText(" "); }
 
 	send(target: string, swap: string, html: JsxEnabled extends true ? (JSX.Element | string) : string) {
-		if (typeof html === "string") return this.sendText(`<${this.#boundary}>${target}|${swap}|${html}</${this.#boundary}>\n`);
+		if (typeof html !== 'string') {
+			if (!this.render) throw new Error(`Cannot render to JSX when no renderer provided during class initialization`);
+			html = this.render(html);
+		}
 
-		if (!this.#render) throw new Error(`Cannot render to JSX when no renderer provided during class initialization`);
-		html = this.#render(html);
+		return this.sendText(`<${this.#boundary}>${target}|${swap}|${html}</${this.#boundary}>\n`);
 	}
 
 	close () {
